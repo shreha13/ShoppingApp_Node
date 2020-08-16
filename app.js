@@ -1,6 +1,8 @@
 const path = require("path");
 
 const mongoose = require("mongoose");
+const csrf = require('csurf')
+const flash = require('connect-flash');
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -50,6 +52,11 @@ app.use(
   })
 );
 
+const csrfProtection = csrf();
+app.use(csrfProtection);
+
+app.use(flash());
+
 app.use((req, res, next) => {
   if (!req.session.user) {
     return next();
@@ -61,6 +68,12 @@ app.use((req, res, next) => {
     })
     .catch((err) => console.log(err));
 });
+
+app.use((req, res, next) => {
+  res.locals.isLoggedIn = req.session.isLoggedIn;
+  res.locals.csrfToken = req.csrfToken();
+  next();
+})
 
 app.use("/admin", adminRoute);
 app.use(shopRoutes);
@@ -103,19 +116,6 @@ app.use(errorController.PageNotFound);
 mongoose
   .connect(MONGODB_URI)
   .then(() => {
-    User.findOne().then((users) => {
-      if (!users) {
-        const user = new User({
-          name: "Shreya",
-          email: "shreyadidwania95@gmail.com",
-          cart: {
-            items: [],
-          },
-        });
-        user.save();
-      }
-    });
-
     app.listen(3000);
   })
   .catch((err) => console.log(err));

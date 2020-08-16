@@ -1,12 +1,10 @@
 const Product = require("../models/product");
 
 exports.getAddProduct = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
   res.render("admin/edit-product", {
     title: "Add Product",
     path: "/admin/add-product",
     editing: false,
-    isLoggedIn: isLoggedIn
   }); //for pug
 };
 
@@ -46,7 +44,7 @@ exports.postAddProduct = (req, res, next) => {
     price: price,
     description: description,
     imageUrl: imageUrl,
-    userId: req.user
+    userId: req.user,
   });
   product
     .save()
@@ -73,7 +71,6 @@ exports.postAddProduct = (req, res, next) => {
 // };
 
 exports.getEditProduct = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
   var editMode = req.query.edit;
   const productId = req.params.productId;
   Product.findById(productId)
@@ -86,7 +83,6 @@ exports.getEditProduct = (req, res, next) => {
         path: "/admin/edit-product",
         editing: editMode,
         product: product,
-        isLoggedIn: isLoggedIn
       });
     })
     .catch((err) => console.log(err));
@@ -135,13 +131,15 @@ exports.postEditProduct = (req, res, next) => {
   //   req.user._id
   // );
 
-  Product.findById(productId)
+  Product.findOne({ _id: productId, userId: req.user._id })
     .then((product) => {
-      product.title = req.body.title;
-      product.price = req.body.price;
-      product.description = req.body.description;
-      product.imageUrl = req.body.imageUrl;
-      product.save();
+      if (product) {
+        product.title = req.body.title;
+        product.price = req.body.price;
+        product.description = req.body.description;
+        product.imageUrl = req.body.imageUrl;
+        product.save();
+      }
     })
     .then(() => res.redirect("/admin/products"))
     .catch((err) => console.log(err));
@@ -164,7 +162,7 @@ exports.postEditProduct = (req, res, next) => {
 
 exports.deleteProduct = (req, res, next) => {
   const productId = req.body.productId;
-  Product.findByIdAndDelete(productId)
+  Product.deleteOne({ _id: productId, userId: req.user._id })
     .then(() => res.redirect("/admin/products"))
     .catch((err) => console.log(err));
 };
@@ -204,14 +202,12 @@ exports.deleteProduct = (req, res, next) => {
 // };
 
 exports.getProducts = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
-  Product.find()
+  Product.find({ userId: req.user._id })
     .then((products) => {
       res.render("admin/products", {
         prods: products,
         title: "All products",
         path: "/admin/products",
-        isLoggedIn: isLoggedIn
       });
     })
     .catch((err) => console.log(err));
