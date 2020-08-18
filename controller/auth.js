@@ -111,7 +111,12 @@ exports.postLogin = (req, res, next) => {
           return res.redirect("/login");
         });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+      //return res.redirect('/500')
+    });
 };
 
 exports.postSignup = (req, res, next) => {
@@ -151,7 +156,12 @@ exports.postSignup = (req, res, next) => {
           subject: "Signup Successful",
           html: "<h1>Sign up succeded!</h1>",
         })
-        .catch((err) => console.log(err));
+        .catch((err) => {
+          const error = new error(err);
+          error.httpStatusCode = 500;
+          return next(error);
+          //return res.redirect('/500')
+        });
     });
 };
 
@@ -205,9 +215,19 @@ exports.postReset = (req, res, body) => {
               `,
             });
           })
-          .catch((err) => console.log(err));
+          .catch((err) => {
+            const error = new error(err);
+            error.httpStatusCode = 500;
+            return next(error);
+            //return res.redirect('/500')
+          });
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        const error = new error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+        //return res.redirect('/500')
+      });
   });
 };
 
@@ -230,7 +250,12 @@ exports.getNewPassword = (req, res, next) => {
         token: token,
       });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+      //return res.redirect('/500')
+    });
 };
 
 exports.postNewPassword = (req, res, next) => {
@@ -262,8 +287,18 @@ exports.postNewPassword = (req, res, next) => {
               subject: "Password Changed Successful",
               html: "<h1>Password change succeded!</h1>",
             })
-            .catch((err) => console.log(err));
+            .catch((err) => {
+              const error = new error(err);
+              error.httpStatusCode = 500;
+              return next(error);
+              //return res.redirect('/500')
+            });
         });
     })
-    .catch((err) => console.log(err));
+    .catch((err) => {
+      const error = new error(err);
+      error.httpStatusCode = 500;
+      return next(error);
+      //return res.redirect('/500')
+    });
 };
