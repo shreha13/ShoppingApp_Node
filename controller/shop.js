@@ -10,6 +10,8 @@ const User = require("../models/user");
 
 const cart = { products: [], totalPrice: 0 };
 
+const ITEMS_PER_PAGE = 1;
+
 // exports.getProducts = (req, res, next) => {
 //   Product.fetchAll((products)=>{
 //     res.render("shop/product-list", { prods: products, title: "All products", path: "/products" }); // for pug
@@ -17,18 +19,32 @@ const cart = { products: [], totalPrice: 0 };
 // };
 
 exports.getProducts = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
+  const page = +req.query.page || 1;
+  let totalItems = 0;
+
   Product.find()
+    .countDocuments()
+    .then((numProduct) => {
+      totalItems = numProduct;
+      return Product.find()
+        .skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
+    })
     .then((products) => {
       res.render("shop/product-list", {
         prods: products,
         title: "All products",
         path: "/products",
-        isLoggedIn: isLoggedIn,
+        nextPage: page + 1,
+        currentPage: page,
+        previousPage: page - 1,
+        hasPreviousPage: page > 1,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
     })
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -43,7 +59,6 @@ exports.getProducts = (req, res, next) => {
 // }
 
 exports.getProduct = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
   const productId = req.params.productId;
   Product.findById(productId)
     .then((product) => {
@@ -51,11 +66,10 @@ exports.getProduct = (req, res, next) => {
         product: product,
         title: product.title,
         path: "/products",
-        isLoggedIn: isLoggedIn,
       });
     })
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -69,18 +83,33 @@ exports.getProduct = (req, res, next) => {
 // };
 
 exports.getIndex = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
+  const page = +req.query.page || 1;
+  let totalItems = 0;
+
   Product.find()
+    .countDocuments()
+    .then((numProduct) => {
+      totalItems = numProduct;
+      return Product.find()
+        .skip((page - 1) * ITEMS_PER_PAGE)
+        .limit(ITEMS_PER_PAGE);
+    })
+
     .then((products) => {
       res.render("shop/index", {
         prods: products,
         title: "Shop",
         path: "/",
-        isLoggedIn: isLoggedIn,
+        nextPage: page + 1,
+        currentPage: page,
+        previousPage: page - 1,
+        hasPreviousPage: page > 1,
+        hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+        lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE),
       });
     })
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -125,7 +154,6 @@ exports.getIndex = (req, res, next) => {
 // };
 
 exports.getCart = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
   const user = req.user;
   user
     .populate("cart.items.productId")
@@ -136,11 +164,10 @@ exports.getCart = (req, res, next) => {
         path: "/cart",
         title: "Your Cart",
         products: products,
-        isLoggedIn: isLoggedIn,
       });
     })
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -196,7 +223,7 @@ exports.postCart = (req, res, next) => {
       .addToCart(result)
       .then(() => res.redirect("/cart"))
       .catch((err) => {
-        const error = new error(err);
+        const error = new Error(err);
         error.httpStatusCode = 500;
         return next(error);
         //return res.redirect('/500')
@@ -224,7 +251,7 @@ exports.deleteProductFromcart = (req, res, body) => {
     .removeItemFromCart(prodId)
     .then((result) => res.redirect("/cart"))
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -240,18 +267,16 @@ exports.getCheckout = (req, res, next) => {
 };
 
 exports.getOrders = (req, res, next) => {
-  const isLoggedIn = req.session.isLoggedIn;
   Order.find({ "user.userId": req.user._id })
     .then((orders) => {
       res.render("shop/orders", {
         title: "Orders",
         path: "/orders",
         orders: orders,
-        isLoggedIn: isLoggedIn,
       });
     })
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -308,7 +333,7 @@ exports.postOrder = (req, res, next) => {
     })
     .then(() => res.redirect("/orders"))
     .catch((err) => {
-      const error = new error(err);
+      const error = new Error(err);
       error.httpStatusCode = 500;
       return next(error);
       //return res.redirect('/500')
@@ -338,17 +363,21 @@ exports.getInvoice = (req, res, next) => {
 
       pdfDoc.pipe(res);
 
-      pdfDoc.fontSize(26).text('Invoice', {
-        underline: true
+      pdfDoc.fontSize(26).text("Invoice", {
+        underline: true,
       });
-      pdfDoc.text('------------------');
-      let totalPrice =0;
-      order.products.forEach(prod=>{
+      pdfDoc.text("------------------");
+      let totalPrice = 0;
+      order.products.forEach((prod) => {
         totalPrice += prod.quantity * prod.productData.price;
-        pdfDoc.fontSize(14).text(`${prod.productData.title} - ${prod.quantity} * $${prod.productData.price}`)
-      })
-      pdfDoc.text('------------------');
-      pdfDoc.fontSize(18).text(`Total Amount - $${totalPrice}`)
+        pdfDoc
+          .fontSize(14)
+          .text(
+            `${prod.productData.title} - ${prod.quantity} * $${prod.productData.price}`
+          );
+      });
+      pdfDoc.text("------------------");
+      pdfDoc.fontSize(18).text(`Total Amount - $${totalPrice}`);
 
       pdfDoc.end();
 
