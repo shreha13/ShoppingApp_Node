@@ -22,9 +22,9 @@ router.post(
   [
     body(
       "title",
-      "Title field should only have numbers and characters atleast 3 character long"
+      "Title field should be atleast 3 character long"
     )
-      .isAlphanumeric()
+      .isString()
       .isLength({ min: 3 })
       .trim(),
     body("imageUrl").isURL(),

@@ -7,12 +7,7 @@ exports.getAddProduct = (req, res, next) => {
     title: "Add Product",
     path: "/admin/add-product",
     editing: false,
-    oldInput:{
-      title: '',
-      imageUrl: '',
-      price: '',
-      description: ''
-    },
+    hasError: false,
     errorMessage: null,
     validationErrors: []
   }); //for pug
@@ -57,7 +52,8 @@ exports.postAddProduct = (req, res, next) => {
       path: "/admin/add-product",
       editing: false,
       errorMessage: errors.array()[0].msg,
-      oldInput:{
+      hasError: true,
+      product:{
         title: title,
         imageUrl: imageUrl,
         price: price,
