@@ -6,6 +6,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
     "connect-flash": "^0.1.1",
     "connect-mongodb-session": "^2.4.0",
     "csurf": "^1.11.0",
@@ -14,8 +15,10 @@
     "express-handlebars": "^3.0.2",
     "express-session": "^1.17.1",
     "express-validator": "^6.6.1",
+    "helmet": "^4.1.1",
     "mongodb": "^3.5.9",
     "mongoose": "^5.10.0",
+    "morgan": "^1.10.0",
     "multer": "^1.4.2",
     "mysql2": "^2.1.0",
     "nodemailer": "^6.4.11",
@@ -27,9 +30,13 @@
     "stripe": "^8.89.0"
   },
   "devDependencies": {},
+  "engines": {
+    "node":"12.18.0"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app.js"
+    "start": "MONGO_USER=shreha MONGO_PASSWORD=IAtsWXsiAfKIvkSX MONGO_DATABASE=shop STRIPE_KEY=sk_test_51HIvRrAIOSc4RsI0Zp82J4IBLaksLG6JxE7bD0nb7eZMvYD0JQUbWpcdvt6yr6Qhe6QjJI3Bnesn5eOpCOzQkno700x6c9IMMj node app.js",
+    "start:dev": "nodemon app.js"
   },
   "author": "Shreha Didwania",
   "license": "ISC"
